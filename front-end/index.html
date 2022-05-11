@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.staticfile.org/angular.js/1.4.6/angular.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <h1 style="text-align:center ;margin:0 auto; width:500px;">pwa push demo</h1></br>
+    <div ng-app="myApp" ng-controller="registerCtrl"
+        style="text-align:center ;margin:0 auto;height: 500px; width:500px;border:2px solid #00F;">
+        <button ng-click="register()"
+            style="width: 300px;height: 100px; margin-top: 50px;font-size:xx-large;">register</button></br>
+
+        <button ng-click="broadcast()"
+            style="width: 300px;height: 100px; margin-top: 20px;font-size:xx-large;">broadcast</button></br>
+
+        <button ng-click="uninstall()"
+            style="width: 300px;height: 100px; margin-top: 20px;font-size:xx-large;">uninstall</button></br>
+        <label style="font-size:xx-large;color: brown;">tips:{{tips}}</label>
+    </div>
+
+</body>
+
+</html>
+
+<script>
+    var serverAddr = "http://127.0.0.1:8081"
+    var app = angular.module('myApp', []);
+    app.controller('registerCtrl', function ($scope) {
+        $scope.tips = "regist first"
+        $scope.uninstall = function () {
+            var isConfirmed = confirm("Are you sure to uninstall this app")
+            if (isConfirmed) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.unregister();
+                })
+            }
+            else{
+                return false
+            }
+
+        }
+        $scope.broadcast = function () {
+            $scope.tips = "pushing ......"
+            return fetch(serverAddr + '/pushMsg', {
+                method: 'post',
+                headers: new Headers({
+                    'content-type': 'application/json'
+                }),
+                body: JSON.stringify({
+                    message: "hello web push"
+                })
+            }).then(res => {
+                console.log(res)
+                $scope.tips = "push msg success"
+                $scope.$digest();
+            });;
+        }
+
+        // 一个将 VAPID 钥从 base64 字符串转换成 Uint8 数组的函数
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+
+        $scope.register = function () {
+
+            // 订阅通知
+            let vapidPublicKey =
+                'BPSTO906RQvft9aGXxTE15CLji_xEVN2bCjYnk5bcr5cPm0EaDOs1NMlRzNVn9NZxHY2KIzpvx0bpPfAnP8ale8';
+            navigator.serviceWorker.ready.then(registration => {
+                    console.log('state', registration)
+                    if (registration.installing || registration.waiting) {
+                        $scope.tips = "regist again later"
+                        $scope.$digest();
+                        return
+                    }
+                    // 查看是否已经存在订阅权限
+                    return registration.pushManager
+                        .getSubscription()
+                        .then(subscription => {
+                            console.log('has subscript', JSON.stringify(subscription))
+                            if (subscription) {
+                                // 已经订阅将订阅信息传给服务器
+                                // 将订阅信息传给服务器
+                                return fetch(serverAddr + '/register', {
+                                    method: 'post',
+                                    headers: new Headers({
+                                        'content-type': 'application/json'
+                                    }),
+                                    body: JSON.stringify({
+                                        subscription: subscription,
+                                    })
+                                }).then(res => {
+                                    console.log(res)
+                                    $scope.tips = "regist success"
+                                    $scope.$digest();
+                                });
+                            }
+                            // 不存在就去申请一下
+                            return registration.pushManager
+                                .subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: urlBase64ToUint8Array(
+                                        vapidPublicKey
+                                    )
+                                })
+                                .then(subscription => {
+                                    console.log("User is subscribed", JSON.stringify(
+                                        subscription))
+                                    // 将订阅信息传给服务器
+                                    return fetch(serverAddr + '/register', {
+                                        method: 'post',
+                                        headers: new Headers({
+                                            'content-type': 'application/json'
+                                        }),
+                                        body: JSON.stringify({
+                                            subscription: subscription,
+                                        })
+                                    }).then(res => {
+                                        console.log(res)
+                                        $scope.tips = "regist success"
+                                        $scope.$digest();
+                                    });;
+                                });
+                        });
+
+            },e=>{
+                console.error("e:",e)
+            })
+                .catch(err => {
+                    console.error(err)
+                    throw err;
+                });
+        }
+    });
+
+
+    window.addEventListener('load', function () {
+        console.log('------load')
+        // 测试兼容性
+        // 支持 serviceWorker
+        console.log("navigtor", navigator)
+        // 注册 serviceWorker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("./sw.js").then(registration => {
+                console.log(registration)
+            })
+        } else {
+            alert("not support serviceWorker,Please use HTTPS address or local address (localhost:port, 127.0.0.1 :port)")
+        }
+        // 支持 push API
+        if (!('PushManager' in window)) return;
+
+        // 获取通知权限
+        let promiseChain = new Promise((resolve, reject) => {
+            return Notification.requestPermission(result => resolve(result));
+        }).then(result => {
+            if (result === 'granted') {
+                console.log("granted")
+                // 有权限就直接执行，弹出通知
+                // execute();
+            } else {
+                console.log('no permission');
+            }
+        });
+
+    });
+</script>

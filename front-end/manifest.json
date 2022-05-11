@@ -1,0 +1,16 @@
+{
+    "name":"pwa-push-demo",
+    "short_name":"pwaDemo",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#fff",
+    "description": "A readable  News app.",
+    "icons": [
+        {
+          "src": "icon/icon.png",
+          "sizes": "any"
+        }
+        
+      ]
+      
+}
