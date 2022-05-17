@@ -4,25 +4,26 @@ const vapidkey = {
     privateKey:'fER5Cn-VypUYwjLSmAzRFtMK3NpHK0bHr1hEkhVdG4I'
 }
 class notify {
+    static subscriptionList=[]
     constructor() {
-        this.subscriptionList = []
+        
     }
 
     register(body) {
-        for (sub of this.subscriptionList) {
+        for (sub of notify.subscriptionList) {
             if (sub.endpoint == body.subscription.endpoint) {
                 return true
             }
         }
-        this.subscriptionList.push(body.subscription)
+        notify.subscriptionList.push(body.subscription)
         console.log("register web", JSON.stringify(body.subscription))
         return true
     }
     unregister(body) {
-        for (let i = 0; i < this.subscriptionList.length; ++i) {
-            if (this.subscriptionList[i].endpoint == body.subscription.endpoint) {
+        for (let i = 0; i < notify.subscriptionList.length; ++i) {
+            if (notify.subscriptionList[i].endpoint == body.subscription.endpoint) {
                 console.log("delete ", body.subscription.endpoint)
-                this.subscriptionList.splice(i, 1)
+                notify.subscriptionList.splice(i, 1)
             }
         }
         return true
@@ -36,7 +37,7 @@ class notify {
             vapidkey.publicKey,
             vapidkey.privateKey
         );
-        for (let subscription of this.subscriptionList) {
+        for (let subscription of notify.subscriptionList) {
             console.log("subscript", JSON.stringify(subscription))
             // 消息推送
             webpush
