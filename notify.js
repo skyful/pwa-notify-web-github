@@ -59,4 +59,4 @@ class notify {
     }
 }
 
-module.exports = notify
+module.exports = new notify()

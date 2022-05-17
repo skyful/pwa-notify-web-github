@@ -2,9 +2,8 @@ const express = require('express')
 const path = require("path")
 var bodyParser = require('body-parser')
 const cors = require("cors")
-const notify = require("./notify")
+const myNotify = require("./notify")
 //webpush.generateVAPIDKeys() 
-var myNotify = new notify()
 const port = 8081
 const app = express();
 
