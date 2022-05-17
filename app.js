@@ -31,7 +31,7 @@ app.post('/unregister', (req, res) => {
     myNotify.unregister(req.body)
     res.sendStatus(201)
 });
-app.post("/pushMsg", (req, res) => {
+app.post("/pushmsg", (req, res) => {
     myNotify.pushMsg(req.body)
     res.sendStatus(201)
 })

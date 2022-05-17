@@ -45,7 +45,7 @@
         }
         $scope.broadcast = function () {
             $scope.tips = "pushing ......"
-            return fetch(serverAddr + '/pushMsg', {
+            return fetch(serverAddr + '/pushmsg', {
                 method: 'post',
                 headers: new Headers({
                     'content-type': 'application/json'
