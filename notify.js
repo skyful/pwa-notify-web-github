@@ -3,29 +3,28 @@ const vapidkey = {
     publicKey: 'BPSTO906RQvft9aGXxTE15CLji_xEVN2bCjYnk5bcr5cPm0EaDOs1NMlRzNVn9NZxHY2KIzpvx0bpPfAnP8ale8',
     privateKey:'fER5Cn-VypUYwjLSmAzRFtMK3NpHK0bHr1hEkhVdG4I'
 }
+const mongodb = require("./mongodb")
 class notify {
-    static subscriptionList=[]
+    // static subscriptionList=[]
     constructor() {
         
     }
 
     register(body) {
-        for (let sub of notify.subscriptionList) {
-            if (sub.endpoint == body.subscription.endpoint) {
-                return true
-            }
-        }
-        notify.subscriptionList.push(body.subscription)
+        mongodb.insertOne(body.subscription).then(() => {
+            
+        }, e => {
+            
+        })
         console.log("register web", JSON.stringify(body.subscription))
         return true
     }
     unregister(body) {
-        for (let i = 0; i < notify.subscriptionList.length; ++i) {
-            if (notify.subscriptionList[i].endpoint == body.subscription.endpoint) {
-                console.log("delete ", body.subscription.endpoint)
-                notify.subscriptionList.splice(i, 1)
-            }
-        }
+        mongodb.deleteOne(body.subscription).then(() => {
+            
+        }, e => {
+            
+        })
         return true
     }
     pushMsg(body) {
@@ -37,26 +36,31 @@ class notify {
             vapidkey.publicKey,
             vapidkey.privateKey
         );
-        for (let subscription of notify.subscriptionList) {
-            console.log("subscript", JSON.stringify(subscription))
-            // 消息推送
-            webpush
-                .sendNotification(
-                    subscription,
-                    JSON.stringify({
-                        msg: body.message,
-                        url: "www.baidu.com",
-                        icon: ""
+        mongodb.getSub().then(subscriptionList => {
+            for (let subscription of subscriptionList) {
+                console.log("subscript", JSON.stringify(subscription))
+                // 消息推送
+                webpush
+                    .sendNotification(
+                        subscription,
+                        JSON.stringify({
+                            msg: body.message,
+                            url: "www.baidu.com",
+                            icon: ""
+                        })
+    
+                    )
+                    .then(result => {
+                        console.log("push success")
                     })
-
-                )
-                .then(result => {
-                    console.log("push success")
-                })
-                .catch(err => { 
-                    console.log("push err", err)
-                });
-        }
+                    .catch(err => { 
+                        console.log("push err", err)
+                    });
+            }
+        }, e => {
+            
+        })
+        
     }
 }
 

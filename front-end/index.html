@@ -27,7 +27,7 @@
 </html>
 
 <script>
-    var serverAddr = "https://pwa-notify-web-github.vercel.app/api"
+    var serverAddr = "https://pwa-notify-web-github-wtl198937-163com.vercel.app/api"
     //var serverAddr = "http://127.0.0.1:8081"
     var app = angular.module('myApp', []);
     app.controller('registerCtrl', function ($scope) {
@@ -35,11 +35,26 @@
         $scope.uninstall = function () {
             var isConfirmed = confirm("Are you sure to uninstall this app")
             if (isConfirmed) {
+                
                 navigator.serviceWorker.ready.then(registration => {
+                    registration.pushManager
+                    .getSubscription()
+                    .then(subscription => {
+                        if (subscription) {
+                            fetch(serverAddr + '/unregister', {
+                                method: 'post',
+                                headers: new Headers({
+                                    'content-type': 'application/json'
+                                }),
+                                body: JSON.stringify({
+                                    subscription: subscription,
+                                })
+                            })
+                        }
+                    })
                     registration.unregister();
                 })
-            }
-            else{
+            } else {
                 return false
             }
 
@@ -138,9 +153,9 @@
                                 });
                         });
 
-            },e=>{
-                console.error("e:",e)
-            })
+                }, e => {
+                    console.error("e:", e)
+                })
                 .catch(err => {
                     console.error(err)
                     throw err;
@@ -160,7 +175,9 @@
                 console.log(registration)
             })
         } else {
-            alert("not support serviceWorker,Please use HTTPS address or local address (localhost:port, 127.0.0.1 :port)")
+            alert(
+                "not support serviceWorker,Please use HTTPS address or local address (localhost:port, 127.0.0.1 :port)"
+                )
         }
         // 支持 push API
         if (!('PushManager' in window)) return;
