@@ -35,23 +35,23 @@
         $scope.uninstall = function () {
             var isConfirmed = confirm("Are you sure to uninstall this app")
             if (isConfirmed) {
-                
+
                 navigator.serviceWorker.ready.then(registration => {
                     registration.pushManager
-                    .getSubscription()
-                    .then(subscription => {
-                        if (subscription) {
-                            fetch(serverAddr + '/unregister', {
-                                method: 'post',
-                                headers: new Headers({
-                                    'content-type': 'application/json'
-                                }),
-                                body: JSON.stringify({
-                                    subscription: subscription,
+                        .getSubscription()
+                        .then(subscription => {
+                            if (subscription) {
+                                fetch(serverAddr + '/unregister', {
+                                    method: 'post',
+                                    headers: new Headers({
+                                        'content-type': 'application/json'
+                                    }),
+                                    body: JSON.stringify({
+                                        subscription: subscription,
+                                    })
                                 })
-                            })
-                        }
-                    })
+                            }
+                        })
                     registration.unregister();
                 })
             } else {
@@ -98,19 +98,23 @@
                 'BPSTO906RQvft9aGXxTE15CLji_xEVN2bCjYnk5bcr5cPm0EaDOs1NMlRzNVn9NZxHY2KIzpvx0bpPfAnP8ale8';
             navigator.serviceWorker.ready.then(registration => {
                     console.log('state', registration)
+
                     if (registration.installing || registration.waiting) {
                         $scope.tips = "regist again later"
                         $scope.$digest();
                         return
                     }
+
                     // 查看是否已经存在订阅权限
                     return registration.pushManager
                         .getSubscription()
                         .then(subscription => {
+
                             console.log('has subscript', JSON.stringify(subscription))
                             if (subscription) {
                                 // 已经订阅将订阅信息传给服务器
                                 // 将订阅信息传给服务器
+
                                 return fetch(serverAddr + '/register', {
                                     method: 'post',
                                     headers: new Headers({
@@ -126,31 +130,48 @@
                                 });
                             }
                             // 不存在就去申请一下
-                            return registration.pushManager
-                                .subscribe({
-                                    userVisibleOnly: true,
-                                    applicationServerKey: urlBase64ToUint8Array(
-                                        vapidPublicKey
-                                    )
-                                })
-                                .then(subscription => {
-                                    console.log("User is subscribed", JSON.stringify(
-                                        subscription))
-                                    // 将订阅信息传给服务器
-                                    return fetch(serverAddr + '/register', {
-                                        method: 'post',
-                                        headers: new Headers({
-                                            'content-type': 'application/json'
-                                        }),
-                                        body: JSON.stringify({
-                                            subscription: subscription,
-                                        })
-                                    }).then(res => {
-                                        console.log(res)
-                                        $scope.tips = "regist success"
-                                        $scope.$digest();
-                                    });;
-                                });
+                            let option = {
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(
+                                    vapidPublicKey
+                                )
+                            }
+                            return registration.pushManager.permissionState(option).then(grant => {
+                             
+                                if (grant == 'denied') {
+                                    alert(" subscribe failed denied")
+                                }
+                                else{
+                                    registration.pushManager
+                                        .subscribe(option)
+                                        .then(subscription => {
+
+                                            console.log("User is subscribed", JSON
+                                                .stringify(subscription))
+                                            // 将订阅信息传给服务器
+
+                                            return fetch(serverAddr + '/register', {
+                                                method: 'post',
+                                                headers: new Headers({
+                                                    'content-type': 'application/json'
+                                                }),
+                                                body: JSON.stringify({
+                                                    subscription: subscription,
+                                                })
+                                            }).then(res => {
+
+                                                console.log(res)
+                                                $scope.tips = "regist success"
+                                                $scope.$digest();
+                                            });;
+                                        }, e => {
+                                            alert('register failed:' + JSON.stringify(
+                                                e))
+                                        });
+                                }
+                               
+
+                            })
                         });
 
                 }, e => {
@@ -173,11 +194,12 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("./sw.js").then(registration => {
                 console.log(registration)
+
             })
         } else {
             alert(
                 "not support serviceWorker,Please use HTTPS address or local address (localhost:port, 127.0.0.1 :port)"
-                )
+            )
         }
         // 支持 push API
         if (!('PushManager' in window)) return;
@@ -190,6 +212,8 @@
                 console.log("granted")
                 // 有权限就直接执行，弹出通知
                 // execute();
+                //获取pushmanage权限
+
             } else {
                 console.log('no permission');
             }

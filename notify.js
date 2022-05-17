@@ -20,7 +20,7 @@ class notify {
         return true
     }
     async pushMsg(body) {
-        console.error("push message", body)
+        console.info("push message", body)
         webpush.setGCMAPIKey('AAAAE7EM338:APA91bHNziRBD3n5bAuxb2HdlQEco24sTiG3nGn4PJKfg1t4ObCcG2P3wAZAMBPscInAJGH1HMDUlESR_Ye4RYE61IEh9sV5O7aSZtV8gbxIRdHfFcf8KosiqNzixEkG2mBwZvn6gbg7')
         // 设置 VAPID
         webpush.setVapidDetails(
@@ -41,6 +41,7 @@ class notify {
                         icon: ""
                     })
                 );
+                console.log("push success",subscription)
             } catch (e) {
                 console.error(e)
             }
