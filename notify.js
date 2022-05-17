@@ -10,7 +10,7 @@ class notify {
     }
 
     register(body) {
-        for (sub of notify.subscriptionList) {
+        for (let sub of notify.subscriptionList) {
             if (sub.endpoint == body.subscription.endpoint) {
                 return true
             }

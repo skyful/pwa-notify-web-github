@@ -2,13 +2,16 @@ const express = require('express')
 const path = require("path")
 var bodyParser = require('body-parser')
 const cors = require("cors")
-const myNotify = require("./notify")
+
 //webpush.generateVAPIDKeys() 
 const port = 8081
 const app = express();
 
 // Middleware for processing JSON objects.
 var bodyParser = require('body-parser');
+const register = require('./api/register')
+const unregister = require('./api/unregister')
+const pushmsg = require('./api/pushmsg')
 app.use(cors())
 app.use(express.json())
 app.use(bodyParser.json());
@@ -23,15 +26,14 @@ app.listen(port, () => {
 
 
 app.post('/register', (req, res) => {
-    myNotify.register(req.body)
-    res.sendStatus(201)
+    register(req,res)
+   // res.sendStatus(201)
 });
 app.post('/unregister', (req, res) => {
     console.log("unregister",req.body)
-    myNotify.unregister(req.body)
-    res.sendStatus(201)
+    unregister(req,res)
+   // res.sendStatus(201)
 });
 app.post("/pushmsg", (req, res) => {
-    myNotify.pushMsg(req.body)
-    res.sendStatus(201)
+    pushmsg(req,res)
 })
